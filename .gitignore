@@ -57,6 +57,7 @@ tags
 /libabc.a
 /abc
 /abc-unlimited
+/abc-unlimited-stime
 
 /arch_flags
 

@@ -148,7 +148,7 @@ clk = Abc_Clock();
         Map_ManSetUseProfile( pMan );
     if ( LogFan != 0 )
         Map_ManCreateNodeDelays( pMan, LogFan );
-    if ( !Map_Mapping( pMan ) )
+    if ( !Map_Mapping( pMan, pNtk ) )
     {
         Map_ManFree( pMan );
         return NULL;
@@ -567,7 +567,7 @@ Abc_Ntk_t * Abc_NtkSuperChoice( Abc_Ntk_t * pNtk )
     pMan = Abc_NtkToMap( pNtk, -1, 1, NULL, 0 );
     if ( pMan == NULL )
         return NULL;
-    if ( !Map_Mapping( pMan ) )
+    if ( !Map_Mapping( pMan, pNtk ) )
     {
         Map_ManFree( pMan );
         return NULL;

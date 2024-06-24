@@ -160,10 +160,11 @@ int Map_MatchCompare( Map_Man_t * pMan, Map_Match_t * pM1, Map_Match_t * pM2, in
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int fPhase, float fWorstLimit )
+int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int fPhase, float fWorstLimit, Abc_Ntk_t * pNtk )
 {
     Map_Match_t MatchBest, * pMatch = pCut->M + fPhase;
     Map_Super_t * pSuper;
+    Abc_Ntk_t * pNtkNew;
     int i, Counter;
 
     // save the current match of the cut
@@ -186,9 +187,15 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
             // find the overall phase of this match
             pMatch->uPhaseBest = pMatch->uPhase ^ pSuper->uPhases[i];
             if ( p->fMappingMode == 0 )
-            {
-                // get the arrival time
-                Map_TimeCutComputeArrival( pNode, pCut, fPhase, fWorstLimit );
+            {   
+                // TODO: change to use stime to compute
+                // reconstruct the network after mapping (use buffers when user requested or in the area mode)
+                pNtkNew = Abc_NtkFromMap( p, pNtk, 0);
+                Abc_SclTimePerform( (SC_Lib *)pAbc->pLibScl, pNtkNew, 0, 0, 0, 0, 0 );
+
+                // original code
+                // Map_TimeCutComputeArrival( pNode, pCut, fPhase, fWorstLimit );
+
                 // skip the cut if the arrival times exceed the required times
                 if ( pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
                     continue;
@@ -229,8 +236,13 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
 
     // recompute the arrival time and area (area flow) of this cut
     if ( pMatch->pSuperBest )
-    {
-        Map_TimeCutComputeArrival( pNode, pCut, fPhase, MAP_FLOAT_LARGE );
+    {   
+        // TODO: change to use stime to compute
+        pNtkNew = Abc_NtkFromMap( p, pNtk, 0);
+
+        // original code
+        // Map_TimeCutComputeArrival( pNode, pCut, fPhase, MAP_FLOAT_LARGE );
+
         if ( p->fMappingMode == 2 || p->fMappingMode == 3 )
             pMatch->AreaFlow = Map_CutGetAreaDerefed( pCut, fPhase );
         else if ( p->fMappingMode == 4 )
@@ -252,7 +264,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase )
+int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase, Abc_Ntk_t * pNtk)
 {
     Map_Match_t MatchBest, * pMatch;
     Map_Cut_t * pCut, * pCutBest;
@@ -315,7 +327,7 @@ int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase )
             continue;
 
         // find the matches for the cut
-        Map_MatchNodeCut( p, pNode, pCut, fPhase, fWorstLimit );
+        Map_MatchNodeCut( p, pNode, pCut, fPhase, fWorstLimit, pNtk );
         if ( pMatch->pSuperBest == NULL || pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
             continue;
 
@@ -578,7 +590,7 @@ void Map_NodeTransferArrivalTimes( Map_Man_t * p, Map_Node_t * pNode )
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MappingMatches( Map_Man_t * p )
+int Map_MappingMatches( Map_Man_t * p, Abc_Ntk_t * pNtk)
 {
     ProgressBar * pProgress;
     Map_Node_t * pNode;
@@ -623,13 +635,13 @@ int Map_MappingMatches( Map_Man_t * p )
         }
 
         // match negative phase
-        if ( !Map_MatchNodePhase( p, pNode, 0 ) )
+        if ( !Map_MatchNodePhase( p, pNode, 0, pNtk ) )
         {
             Extra_ProgressBarStop( pProgress );
             return 0;
         }
         // match positive phase
-        if ( !Map_MatchNodePhase( p, pNode, 1 ) )
+        if ( !Map_MatchNodePhase( p, pNode, 1, pNtk ) )
         {
             Extra_ProgressBarStop( pProgress );
             return 0;

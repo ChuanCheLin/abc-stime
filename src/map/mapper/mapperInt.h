@@ -380,7 +380,7 @@ extern int               Map_NodeGetFanoutNum( Map_Node_t * pNode );
 extern Map_SuperLib_t *  Map_SuperLibCreate( Mio_Library_t * pGenlib, Vec_Str_t * vStr, char * pFileName, char * pExcludeFile, int  fAlgorithm, int  fVerbose );
 extern void              Map_SuperLibFree( Map_SuperLib_t * p );
 /*=== mapperMatch.c ===============================================================*/
-extern int               Map_MappingMatches( Map_Man_t * p );
+extern int               Map_MappingMatches( Map_Man_t * p, Abc_Ntk_t * pNtk );
 /*=== mapperRefs.c =============================================================*/
 extern void              Map_MappingEstimateRefsInit( Map_Man_t * p );
 extern void              Map_MappingEstimateRefs( Map_Man_t * p );

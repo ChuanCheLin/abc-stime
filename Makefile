@@ -12,7 +12,7 @@ $(info $(MSG_PREFIX)Using CXX=$(CXX))
 $(info $(MSG_PREFIX)Using AR=$(AR))
 $(info $(MSG_PREFIX)Using LD=$(LD))
 
-PROG := abc-unlimited
+PROG := abc-unlimited-stime
 OS := $(shell uname -s)
 
 MODULES := \
