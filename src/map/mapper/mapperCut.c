@@ -248,7 +248,7 @@ Map_Cut_t * Map_CutCompute( Map_Man_t * p, Map_CutTable_t * pTable, Map_Node_t *
             assert( pTemp->pCuts );
             pList = Map_CutUnionLists( pList, pTemp->pCuts );
             assert( pTemp->pCuts );
-            pList = Map_CutSortCuts( p, pTable, pList );
+            // pList = Map_CutSortCuts( p, pTable, pList );
         }
     }
     // add the new cut
@@ -261,7 +261,7 @@ Map_Cut_t * Map_CutCompute( Map_Man_t * p, Map_CutTable_t * pTable, Map_Node_t *
     // set at the node
     pNode->pCuts = pCut;
     // remove the dominated cuts
-    Map_CutFilter( p, pNode );
+    // Map_CutFilter( p, pNode );
     // set the phase correctly
     if ( pNode->pRepr && Map_NodeComparePhase(pNode, pNode->pRepr) )
     {
@@ -503,7 +503,7 @@ QUITS :
     }
     *ppListNew = NULL;
     // soft the cuts by arrival times and use only the first MAP_CUTS_MAX_USE
-    pListNew = Map_CutSortCuts( p, pTable, pListNew );
+    // pListNew = Map_CutSortCuts( p, pTable, pListNew );
     return pListNew;
 }
 
@@ -570,7 +570,7 @@ QUITS :
     }
     *ppListNew = NULL;
     // soft the cuts by arrival times and use only the first MAP_CUTS_MAX_USE
-    pListNew = Map_CutSortCuts( p, pTable, pListNew );
+    // pListNew = Map_CutSortCuts( p, pTable, pListNew );
     return pListNew;
 }
 
