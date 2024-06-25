@@ -21,6 +21,7 @@
 #include "misc/util/utilNam.h"
 #include "map/scl/sclCon.h"
 
+#include "base/main/main.h"
 ABC_NAMESPACE_IMPL_START
 
 
@@ -191,7 +192,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
                 // TODO: change to use stime to compute
                 // reconstruct the network after mapping (use buffers when user requested or in the area mode)
                 pNtkNew = Abc_NtkFromMapMatching( p, pNtk, 0);
-                // Abc_SclTimePerform( (SC_Lib *)pAbc->pLibScl, pNtkNew, 0, 0, 0, 0, 0 );
+                Abc_SclTimePerform( Abc_FrameReadLibScl(), pNtkNew, 0, 0, 0, 0, 0 );
 
                 // original code
                 // Map_TimeCutComputeArrival( pNode, pCut, fPhase, fWorstLimit );
