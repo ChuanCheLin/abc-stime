@@ -47,7 +47,7 @@ ABC_NAMESPACE_IMPL_START
   SeeAlso     []
 
 ***********************************************************************/
-int Map_Mapping( Map_Man_t * p, Abc_Ntk_t * pNtk)
+int Map_Mapping( Map_Man_t * p )
 {
     int fShowSwitching         = 0;
     int fUseAreaFlow           = 1;
@@ -77,7 +77,7 @@ int Map_Mapping( Map_Man_t * p, Abc_Ntk_t * pNtk)
     // compute the minimum-delay mapping
     clk = Abc_Clock();
     p->fMappingMode = 0;
-    if ( !Map_MappingMatches( p, pNtk ) )
+    if ( !Map_MappingMatches( p ) )
         return 0;
     p->timeMatch = Abc_Clock() - clk;
     // compute the references and collect the nodes used in the mapping
@@ -109,7 +109,7 @@ ABC_PRT( "Time", p->timeMatch );
         Map_TimeComputeRequiredGlobal( p );
         // recover area flow
         p->fMappingMode = 1;
-        Map_MappingMatches( p, pNtk );
+        Map_MappingMatches( p );
         // compute the references and collect the nodes used in the mapping
         Map_MappingSetRefs( p );
         p->AreaFinal = Map_MappingGetArea( p );
@@ -135,7 +135,7 @@ ABC_PRT( "Time", Abc_Clock() - clk );
         Map_TimeComputeRequiredGlobal( p );
         // recover area
         p->fMappingMode = 2;
-        Map_MappingMatches( p, pNtk );
+        Map_MappingMatches( p );
         // compute the references and collect the nodes used in the mapping
         Map_MappingSetRefs( p );
         p->AreaFinal = Map_MappingGetArea( p );
@@ -161,7 +161,7 @@ ABC_PRT( "Time", Abc_Clock() - clk );
         Map_TimeComputeRequiredGlobal( p );
         // recover area
         p->fMappingMode = 3;
-        Map_MappingMatches( p, pNtk );
+        Map_MappingMatches( p );
         // compute the references and collect the nodes used in the mapping
         Map_MappingSetRefs( p );
         p->AreaFinal = Map_MappingGetArea( p );
@@ -187,7 +187,7 @@ ABC_PRT( "Time", Abc_Clock() - clk );
         Map_TimeComputeRequiredGlobal( p );
         // recover switching activity
         p->fMappingMode = 4;
-        Map_MappingMatches( p, pNtk );
+        Map_MappingMatches( p );
         // compute the references and collect the nodes used in the mapping
         Map_MappingSetRefs( p );
         p->AreaFinal = Map_MappingGetArea( p );
@@ -205,7 +205,7 @@ ABC_PRT( "Time", Abc_Clock() - clk );
         Map_TimeComputeRequiredGlobal( p );
         // recover switching activity
         p->fMappingMode = 4;
-        Map_MappingMatches( p, pNtk );
+        Map_MappingMatches( p );
         // compute the references and collect the nodes used in the mapping
         Map_MappingSetRefs( p );
         p->AreaFinal = Map_MappingGetArea( p );
