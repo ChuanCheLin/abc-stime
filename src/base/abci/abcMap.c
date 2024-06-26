@@ -34,7 +34,6 @@ ABC_NAMESPACE_IMPL_START
 ////////////////////////////////////////////////////////////////////////
 
 extern Map_Man_t *  Abc_NtkToMap( Abc_Ntk_t * pNtk, double DelayTarget, int fRecovery, float * pSwitching, int fVerbose );
-extern Abc_Ntk_t *  Abc_NtkFromMapMatching( Map_Man_t * pMan, Abc_Ntk_t * pNtk, int fUseBuffs );
 extern Abc_Ntk_t *  Abc_NtkFromMap( Map_Man_t * pMan, Abc_Ntk_t * pNtk, int fUseBuffs );
 static Abc_Obj_t *  Abc_NodeFromMap_rec( Abc_Ntk_t * pNtkNew, Map_Node_t * pNodeMap, int fPhase );
 static Abc_Obj_t *  Abc_NodeFromMapPhase_rec( Abc_Ntk_t * pNtkNew, Map_Node_t * pNodeMap, int fPhase );
@@ -462,72 +461,19 @@ Abc_Obj_t * Abc_NodeFromMap_rec( Abc_Ntk_t * pNtkNew, Map_Node_t * pNodeMap, int
     if ( Map_NodeReadCutBest(pNodeMap, fPhase) != NULL )
         return Abc_NodeFromMapPhase_rec( pNtkNew, pNodeMap, fPhase );
 
-    // // if the cut is not assigned, implement the node
-    // assert( Map_NodeReadCutBest(pNodeMap, !fPhase) != NULL || Map_NodeIsConst(pNodeMap) );
-    // pNodeNew = Abc_NodeFromMapPhase_rec( pNtkNew, pNodeMap, !fPhase );
+    // if the cut is not assigned, implement the node
+    assert( Map_NodeReadCutBest(pNodeMap, !fPhase) != NULL || Map_NodeIsConst(pNodeMap) );
+    pNodeNew = Abc_NodeFromMapPhase_rec( pNtkNew, pNodeMap, !fPhase );
 
-    // // add the inverter
-    // pNodeInv = Abc_NtkCreateNode( pNtkNew );
-    // Vec_IntWriteEntry( pNtkNew->vOrigNodeIds, pNodeInv->Id, Abc_Var2Lit( Map_NodeReadAigId(pNodeMap), fPhase ) );
-    // Abc_ObjAddFanin( pNodeInv, pNodeNew );
-    // pNodeInv->pData = Mio_LibraryReadInv((Mio_Library_t *)Abc_FrameReadLibGen());
+    // add the inverter
+    pNodeInv = Abc_NtkCreateNode( pNtkNew );
+    Vec_IntWriteEntry( pNtkNew->vOrigNodeIds, pNodeInv->Id, Abc_Var2Lit( Map_NodeReadAigId(pNodeMap), fPhase ) );
+    Abc_ObjAddFanin( pNodeInv, pNodeNew );
+    pNodeInv->pData = Mio_LibraryReadInv((Mio_Library_t *)Abc_FrameReadLibGen());
 
-    // // set the inverter
-    // Map_NodeSetData( pNodeMap, fPhase, (char *)pNodeInv );
-    // return pNodeInv;
-}
-Abc_Ntk_t * Abc_NtkFromMapMatching( Map_Man_t * pMan, Abc_Ntk_t * pNtk, int fUseBuffs )
-{
-    Abc_Ntk_t * pNtkNew;
-    Map_Node_t * pNodeMap;
-    Abc_Obj_t * pNode, * pNodeNew;
-    int i, nDupGates;
-    assert( Map_ManReadBufNum(pMan) == pNtk->nBarBufs );
-    // create the new network
-    pNtkNew = Abc_NtkStartFrom( pNtk, ABC_NTK_LOGIC, ABC_FUNC_MAP );
-    pNtkNew->vOrigNodeIds = Vec_IntStartFull( 2 * Abc_NtkObjNumMax(pNtk) );
-    // make the mapper point to the new network
-    Map_ManCleanData( pMan );
-    Abc_NtkForEachCi( pNtk, pNode, i )
-    {
-        if ( i >= Abc_NtkCiNum(pNtk) - pNtk->nBarBufs )
-            break;
-        Map_NodeSetData( Map_ManReadInputs(pMan)[i], 1, (char *)pNode->pCopy );
-    }
-    Abc_NtkForEachCi( pNtk, pNode, i )
-    {
-        if ( i < Abc_NtkCiNum(pNtk) - pNtk->nBarBufs )
-            continue;
-        Map_NodeSetData( Map_ManReadBufs(pMan)[i - (Abc_NtkCiNum(pNtk) - pNtk->nBarBufs)], 1, (char *)pNode->pCopy );
-    }
-    // assign the mapping of the required phase to the POs
-    Abc_NtkForEachCo( pNtk, pNode, i )
-    {
-        if ( i < Abc_NtkCoNum(pNtk) - pNtk->nBarBufs )
-            continue;
-        pNodeMap = Map_ManReadBufDriver( pMan, i - (Abc_NtkCoNum(pNtk) - pNtk->nBarBufs) );
-        pNodeNew = Abc_NodeFromMap_rec( pNtkNew, Map_Regular(pNodeMap), !Map_IsComplement(pNodeMap) );
-        // assert( !Abc_ObjIsComplement(pNodeNew) );
-        if (pNodeNew)
-            Abc_ObjAddFanin( pNode->pCopy, pNodeNew );
-    }
-    Abc_NtkForEachCo( pNtk, pNode, i )
-    {
-        if ( i >= Abc_NtkCoNum(pNtk) - pNtk->nBarBufs )
-            break;
-        pNodeMap = Map_ManReadOutputs(pMan)[i];
-        pNodeNew = Abc_NodeFromMap_rec( pNtkNew, Map_Regular(pNodeMap), !Map_IsComplement(pNodeMap) );
-        // assert( !Abc_ObjIsComplement(pNodeNew) );
-        if (pNodeNew)
-            Abc_ObjAddFanin( pNode->pCopy, pNodeNew );
-    }
-    // decouple the PO driver nodes to reduce the number of levels
-    // TODO: temporirily remove this line, need to used it when we have nodes in the last level
-    // nDupGates = Abc_NtkLogicMakeSimpleCos( pNtkNew, !fUseBuffs );
-
-//    if ( nDupGates && Map_ManReadVerbose(pMan) )
-//        printf( "Duplicated %d gates to decouple the CO drivers.\n", nDupGates );
-    return pNtkNew;
+    // set the inverter
+    Map_NodeSetData( pNodeMap, fPhase, (char *)pNodeInv );
+    return pNodeInv;
 }
 Abc_Ntk_t * Abc_NtkFromMap( Map_Man_t * pMan, Abc_Ntk_t * pNtk, int fUseBuffs )
 {
