@@ -252,7 +252,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase )
+int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase, Abc_Ntk_t * pNtkNew )
 {
     Map_Match_t MatchBest, * pMatch;
     Map_Cut_t * pCut, * pCutBest;
@@ -578,10 +578,12 @@ void Map_NodeTransferArrivalTimes( Map_Man_t * p, Map_Node_t * pNode )
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MappingMatches( Map_Man_t * p )
+int Map_MappingMatches( Map_Man_t * p, Abc_Ntk_t * pNtk )
 {
     ProgressBar * pProgress;
     Map_Node_t * pNode;
+    Abc_Obj_t * pObj; // the node obj to create the cone
+    Abc_Ntk_t * pNtkNew;
     int i;
 
     assert( p->fMappingMode >= 0 && p->fMappingMode <= 4 );
@@ -599,9 +601,19 @@ int Map_MappingMatches( Map_Man_t * p )
     // the PI cuts are matched in the cut computation package
     // in the loop below we match the internal nodes
     pProgress = Extra_ProgressBarStart( stdout, p->vMapObjs->nSize );
+    int cur = 0;
     for ( i = 0; i < p->vMapObjs->nSize; i++ )
     {
         pNode = p->vMapObjs->pArray[i];
+        pObj = pNtk->vObjs->pArray[cur];
+        while ( !( Abc_ObjIsNode(pObj) || (Abc_NtkIsStrash(pNtk) && (Abc_AigNodeIsConst(pObj) || Abc_ObjIsCi(pObj)))  ) ){
+            cur++;
+            pObj = pNtk->vObjs->pArray[cur];
+        }
+        cur++;
+
+        pNtkNew = Abc_NtkCreateCone( pNtk, pObj, "exampleNode", 0 );
+
         if ( Map_NodeIsBuf(pNode) )
         {
             assert( pNode->p2 == NULL );
@@ -623,13 +635,13 @@ int Map_MappingMatches( Map_Man_t * p )
         }
 
         // match negative phase
-        if ( !Map_MatchNodePhase( p, pNode, 0 ) )
+        if ( !Map_MatchNodePhase( p, pNode, 0, pNtkNew ) )
         {
             Extra_ProgressBarStop( pProgress );
             return 0;
         }
         // match positive phase
-        if ( !Map_MatchNodePhase( p, pNode, 1 ) )
+        if ( !Map_MatchNodePhase( p, pNode, 1, pNtkNew ) )
         {
             Extra_ProgressBarStop( pProgress );
             return 0;
