@@ -20,8 +20,11 @@
 
 #include "misc/util/utilNam.h"
 #include "map/scl/sclCon.h"
+#include "map/scl/sclSize.h"
 
 ABC_NAMESPACE_IMPL_START
+
+extern Abc_Ntk_t * Abc_NtkFromMap( Map_Man_t * p, Abc_Ntk_t * pNtk, int fVerbose );
 
 
 /*
@@ -160,10 +163,11 @@ int Map_MatchCompare( Map_Man_t * pMan, Map_Match_t * pM1, Map_Match_t * pM2, in
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int fPhase, float fWorstLimit )
+int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int fPhase, float fWorstLimit, Abc_Ntk_t * pNtk )
 {
     Map_Match_t MatchBest, * pMatch = pCut->M + fPhase;
     Map_Super_t * pSuper;
+    Abc_Ntk_t * pNtkNew;
     int i, Counter;
 
     // save the current match of the cut
@@ -188,7 +192,14 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
             if ( p->fMappingMode == 0 )
             {
                 // get the arrival time
-                Map_TimeCutComputeArrival( pNode, pCut, fPhase, fWorstLimit );
+                // Map_TimeCutComputeArrival( pNode, pCut, fPhase, fWorstLimit );
+                
+                // generate a sub-pMan
+
+                // generate the mapped Ntk
+                pNtkNew = Abc_NtkFromMap( p, pNtk, 0 );
+
+                Abc_SclTimePerform( Abc_FrameReadLibScl(), pNtkNew , 0, 0, 0, 0, 0 );
                 // skip the cut if the arrival times exceed the required times
                 if ( pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
                     continue;
@@ -252,7 +263,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
   SeeAlso     []
 
 ***********************************************************************/
-int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase, Abc_Ntk_t * pNtkNew )
+int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase, Abc_Ntk_t * pNtk )
 {
     Map_Match_t MatchBest, * pMatch;
     Map_Cut_t * pCut, * pCutBest;
@@ -315,7 +326,7 @@ int Map_MatchNodePhase( Map_Man_t * p, Map_Node_t * pNode, int fPhase, Abc_Ntk_t
             continue;
 
         // find the matches for the cut
-        Map_MatchNodeCut( p, pNode, pCut, fPhase, fWorstLimit );
+        Map_MatchNodeCut( p, pNode, pCut, fPhase, fWorstLimit, pNtk );
         if ( pMatch->pSuperBest == NULL || pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
             continue;
 
