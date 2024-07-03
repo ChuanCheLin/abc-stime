@@ -41,6 +41,14 @@ ABC_NAMESPACE_HEADER_START
 ///                    STRUCTURE DEFINITIONS                         ///
 ////////////////////////////////////////////////////////////////////////
 
+typedef struct SclTimeReport_          SclTimeReport;
+struct SclTimeReport_{
+    int nodeCount;
+    float estLoadAve;
+    float totalArea;
+    float maxDelay;
+};
+
 typedef struct SC_Man_          SC_Man;
 struct SC_Man_ 
 {
@@ -571,6 +579,7 @@ extern int           Abc_SclTimeIncUpdate( SC_Man * p );
 extern void          Abc_SclTimeIncInsert( SC_Man * p, Abc_Obj_t * pObj );
 extern void          Abc_SclTimeIncUpdateLevel( Abc_Obj_t * pObj );
 extern void          Abc_SclTimePerform( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats );
+extern SclTimeReport          Abc_SclTimePerformReport( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats );
 extern void          Abc_SclPrintBuffers( SC_Lib * pLib, Abc_Ntk_t * pNtk, int fVerbose );
 /*=== sclUpsize.c ===============================================================*/
 extern int           Abc_SclCountNearCriticalNodes( SC_Man * p );

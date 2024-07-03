@@ -164,6 +164,7 @@ void Abc_SclTimeNtkPrint( SC_Man * p, int fShowAll, int fPrintPath )
     printf( "(%5.1f %%)   ",       100.0 * Abc_SclCountNearCriticalNodes(p) / Abc_NtkNodeNum(p->pNtk) );
     printf( "            \n" );
 #else
+    // printf("stime:%d, %.2f, %.2f, %.2f\n",  Abc_NtkNodeNum(p->pNtk),p->EstLoadAve, Abc_SclGetTotalArea(p->pNtk), maxDelay);
     Abc_Print( 1, "WireLoad = \"%s\"  ",   p->pWLoadUsed ? p->pWLoadUsed->pName : "none" );
     Abc_Print( 1, "%sGates =%7d%s ",       "\033[1;33m", Abc_NtkNodeNum(p->pNtk),      "\033[0m" ); // yellow
     Abc_Print( 1, "(%5.1f %%)   ",         100.0 * Abc_SclGetBufInvCount(p->pNtk) / Abc_NtkNodeNum(p->pNtk) );
@@ -259,6 +260,20 @@ void Abc_SclTimeNtkPrint( SC_Man * p, int fShowAll, int fPrintPath )
     }
 }
 
+SclTimeReport Abc_SclTimeNtkReport( SC_Man * p )
+{
+    int fRise = 0;
+    Abc_Obj_t * pPivot = Abc_SclFindCriticalCo( p, &fRise ); 
+    float maxDelay = Abc_SclObjTimeOne( p, pPivot, fRise );
+    p->ReportDelay = maxDelay;
+
+    SclTimeReport report;
+    report.nodeCount = Abc_NtkNodeNum(p->pNtk);
+    report.estLoadAve = p->EstLoadAve;
+    report.totalArea = Abc_SclGetTotalArea(p->pNtk);
+    report.maxDelay = maxDelay;
+    return report;
+}
 /**Function*************************************************************
 
   Synopsis    [Timing computation for pin/gate/cone/network.]
@@ -686,11 +701,28 @@ SC_Man * Abc_SclManStart( SC_Lib * pLib, Abc_Ntk_t * pNtk, int fUseWireLoads, in
 void Abc_SclTimePerformInt( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats )
 {
     SC_Man * p;
+
     p = Abc_SclManStart( pLib, pNtk, fUseWireLoads, 1, 0, nTreeCRatio );
     Abc_SclTimeNtkPrint( p, fShowAll, fPrintPath );
+
     if ( fDumpStats )
         Abc_SclDumpStats( p, "stats.txt", 0 );
     Abc_SclManFree( p );
+}
+SclTimeReport Abc_SclTimePerformIntReport( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats )
+{
+    SC_Man * p;
+    SclTimeReport report;
+
+    p = Abc_SclManStart( pLib, pNtk, fUseWireLoads, 1, 0, nTreeCRatio );
+    Abc_SclTimeNtkPrint( p, fShowAll, fPrintPath );
+    report = Abc_SclTimeNtkReport( p );
+
+    if ( fDumpStats )
+        Abc_SclDumpStats( p, "stats.txt", 0 );
+    Abc_SclManFree( p );
+
+    return report;
 }
 
 /**Function*************************************************************
@@ -707,11 +739,24 @@ void Abc_SclTimePerformInt( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, in
 void Abc_SclTimePerform( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats )
 {
     Abc_Ntk_t * pNtkNew = pNtk;
+
     if ( pNtk->nBarBufs2 > 0 )
         pNtkNew = Abc_NtkDupDfsNoBarBufs( pNtk );
     Abc_SclTimePerformInt( pLib, pNtkNew, nTreeCRatio, fUseWireLoads, fShowAll, fPrintPath, fDumpStats );
     if ( pNtk->nBarBufs2 > 0 )
         Abc_NtkDelete( pNtkNew );
+}
+SclTimeReport Abc_SclTimePerformReport( SC_Lib * pLib, Abc_Ntk_t * pNtk, int nTreeCRatio, int fUseWireLoads, int fShowAll, int fPrintPath, int fDumpStats )
+{
+    Abc_Ntk_t * pNtkNew = pNtk;
+    SclTimeReport report;
+
+    if ( pNtk->nBarBufs2 > 0 )
+        pNtkNew = Abc_NtkDupDfsNoBarBufs( pNtk );
+    report = Abc_SclTimePerformIntReport( pLib, pNtkNew, nTreeCRatio, fUseWireLoads, fShowAll, fPrintPath, fDumpStats );
+    if ( pNtk->nBarBufs2 > 0 )
+        Abc_NtkDelete( pNtkNew );
+    return report;
 }
 
 

@@ -168,6 +168,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
     Map_Match_t MatchBest, * pMatch = pCut->M + fPhase;
     Map_Super_t * pSuper;
     Abc_Ntk_t * pNtkNew;
+    SclTimeReport report;
     int i, Counter;
 
     // save the current match of the cut
@@ -196,10 +197,17 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
                 
                 // generate a sub-pMan
 
+                // put the current supergate into the sub-pMan
+
                 // generate the mapped Ntk
                 pNtkNew = Abc_NtkFromMap( p, pNtk, 0 );
 
-                Abc_SclTimePerform( Abc_FrameReadLibScl(), pNtkNew , 0, 0, 0, 0, 0 );
+                report = Abc_SclTimePerformReport( Abc_FrameReadLibScl(), pNtkNew , 0, 0, 0, 0, 0 );
+
+                // printf("Max Delay: %f ps\n", report.maxDelay);
+
+                // use the stats from stime
+
                 // skip the cut if the arrival times exceed the required times
                 if ( pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
                     continue;
