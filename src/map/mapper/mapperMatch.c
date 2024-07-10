@@ -207,6 +207,7 @@ int Map_MatchNodeCut( Map_Man_t * p, Map_Node_t * pNode, Map_Cut_t * pCut, int f
                 // printf("Max Delay: %f ps\n", report.maxDelay);
 
                 // use the stats from stime
+                pMatch->tArrive.Worst = report.maxDelay;
 
                 // skip the cut if the arrival times exceed the required times
                 if ( pMatch->tArrive.Worst > fWorstLimit + p->fEpsilon )
